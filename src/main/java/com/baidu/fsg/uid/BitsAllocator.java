@@ -67,6 +67,10 @@ public class BitsAllocator {
         this.sequenceBits = sequenceBits;
 
         // initialize max value
+        //-1 是111111111（64个1）
+        //先将-1左移timestampBits位，得到111111100000（timestampBits个零)
+        //然后取反，得到00000....1111...（timestampBits）个1
+        //等价于2的timestampBits次方-1
         this.maxDeltaSeconds = ~(-1L << timestampBits);
         this.maxWorkerId = ~(-1L << workerIdBits);
         this.maxSequence = ~(-1L << sequenceBits);
@@ -79,6 +83,10 @@ public class BitsAllocator {
     /**
      * Allocate bits for UID according to delta seconds & workerId & sequence<br>
      * <b>Note that: </b>The highest bit will always be 0 for sign
+     * 这里就是把不同的字段放到相应的位上
+     * id的总体结构是：
+     * sign (fixed 1bit) -> deltaSecond -> workerId -> sequence(within the same second)
+     * deltaSecond 左移（workerIdBits + sequenceBits）位，workerId左移sequenceBits位，此时就完成了字节的分配
      * 
      * @param deltaSeconds
      * @param workerId
